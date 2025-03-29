@@ -5,6 +5,21 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    networks:
+      default:
+        aliases:
+          - mongo
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   mongo-express:
     image: mongo-express
@@ -16,8 +31,13 @@ services:
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=pass
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+      - ME_CONFIG_MONGODB_AUTH_USERNAME=admin
+      - ME_CONFIG_MONGODB_AUTH_PASSWORD=pass
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
 
   bot:
     build: 
@@ -26,11 +46,14 @@ services:
     ports:
       - "${API_PORT}:8000"
     environment:
-      - MONGODB_URL=${MONGODB_URL}
-      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - BOTSPOT_MONGO_DATABASE_CONN_STR=mongodb://admin:pass@mongodb:27017/admin?authSource=admin
+      - BOTSPOT_MONGO_DATABASE_DATABASE=${MONGODB_DATABASE:-test}
+      # - MONGODB_URL=mongodb://admin:pass@mongodb:27017
+      # - MONGODB_DATABASE=${MONGODB_DATABASE:-test}
     depends_on:
       mongodb:
-        condition: service_started
+        condition: service_healthy
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -39,4 +62,5 @@ services:
       start_period: 10s
 
 volumes:
-  mongodb_data: 
+  mongodb_data:
+  mongodb_config: 

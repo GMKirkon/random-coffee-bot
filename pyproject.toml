@@ -89,6 +89,7 @@ langchain-anthropic = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=6"
+pytest-asyncio = "^0.23.5"
 #pytest-mongodb = "*"
 black = {extras = ["jupyter"], version = "^25.1.0"}
 flake8 = "^7.1.1"

@@ -1,22 +1,22 @@
-# Botspot Template
+# Random Coffee Bot
 
-A template for creating Telegram bots using [botspot](https://github.com/calmmage/botspot) - a framework built on top of aiogram that provides useful components and utilities.
+A Telegram bot that helps organize random coffee meetings between team members. Built with [botspot](https://github.com/calmmage/botspot) and aiogram.
 
 ## Features
 
-- 🚀 Quick setup with minimal boilerplate
-- 🛠 Built-in components for common bot features
+- 👥 Add and manage team members
+- 🏷️ Tag-based filtering for coffee matches
+- 🎲 Random person selection with tag filtering
+- 📊 MongoDB integration with automatic authentication
 - 🔧 Easy configuration via environment variables
-- 📝 Command menu management out of the box
 - ⚡ Error handling and reporting
-- 🔍 Bot URL printing for easy testing
 
 ## Quick Start
 
-1. Clone this template:
+1. Clone the repository:
 ```bash
-git clone https://github.com/calmmage/botspot-template.git your-bot-name
-cd your-bot-name
+git clone https://github.com/yourusername/random-coffee-bot.git
+cd random-coffee-bot
 ```
 
 2. Install dependencies:
@@ -30,10 +30,33 @@ cp example.env .env
 # Edit .env with your bot token and settings
 ```
 
-4. Run the bot:
+4. Start the services:
 ```bash
-poetry run python run.py
+docker-compose up -d
 ```
+
+5. Run the bot (choose ONE of these methods):
+
+   a. Run in Docker (recommended):
+   ```bash
+   docker-compose up bot
+   ```
+
+   b. Run locally (for development):
+   ```bash
+   poetry run python run.py
+   ```
+
+   ⚠️ **Important**: Do not run the bot both in Docker and locally at the same time, as this will cause conflicts.
+
+## Available Commands
+
+- `/add @username [tags...]` - Add a person to the database with optional tags
+- `/delete @username` - Delete a person from the database
+- `/random [tags]` - Get a random person (optionally filtered by tags)
+- `/add_tags @username tag1 tag2 ...` - Add multiple tags to a person
+- `/list` - List all persons in the database
+- `/list_by_tag tag` - List all persons with a specific tag
 
 ## Project Structure
 
@@ -42,7 +65,7 @@ poetry run python run.py
 ├── app/
 │   ├── _app.py          # Core app
 │   ├── bot.py           # Bot setup & launcher
-│   ├── router.py          
+│   ├── router.py        # Bot commands and handlers
 │   └── __init__.py
 ├── example.env         # Example environment variables
 ├── pyproject.toml      # Project dependencies
@@ -54,13 +77,34 @@ poetry run python run.py
 
 ## Configuration
 
-The template uses environment variables for configuration. See `example.env` for available options:
+The bot uses environment variables for configuration. Copy `example.env` to `.env` and edit the following variables:
 
+Required variables:
 - `TELEGRAM_BOT_TOKEN`: Your bot token from @BotFather
-- `BOTSPOT_PRINT_BOT_URL_ENABLED`: Print bot URL on startup
-- `BOTSPOT_ERROR_HANDLER_ENABLED`: Enable error handling
-- `BOTSPOT_BOT_COMMANDS_MENU_ENABLED`: Enable command menu
+
+MongoDB configuration:
+- `BOTSPOT_MONGO_DATABASE_ENABLED`: Set to `true` to enable MongoDB
+- `BOTSPOT_MONGO_DATABASE_CONN_STR`: MongoDB connection string (default: mongodb://admin:pass@localhost:27017/admin?authSource=admin)
+- `BOTSPOT_MONGO_DATABASE_DATABASE`: MongoDB database name (default: random_bot)
+
+Other options:
+- `BOTSPOT_SCHEDULER_ENABLED`: Enable event scheduler
+- `BOTSPOT_USER_DATA_ENABLED`: Enable user data storage
 - And more...
+
+## MongoDB Setup
+
+MongoDB is automatically configured with authentication when the container starts. The default credentials are:
+- Username: `admin`
+- Password: `pass`
+- Database: `admin`
+- Auth Source: `admin`
+
+These credentials are set up in the `docker-compose.yaml` file using MongoDB's initialization environment variables:
+- `MONGO_INITDB_ROOT_USERNAME`
+- `MONGO_INITDB_ROOT_PASSWORD`
+
+The bot and mongo-express services are automatically configured to use these credentials.
 
 ## Development
 
@@ -81,6 +125,30 @@ Build and run with Docker:
 ```bash
 docker-compose up --build
 ```
+
+## Troubleshooting
+
+If you encounter the error "Conflict: terminated by other getUpdates request", it means multiple instances of the bot are trying to run simultaneously. To fix this:
+
+1. Stop all running containers:
+```bash
+docker-compose down
+```
+
+2. Make sure you're only running the bot in one place (either in Docker or locally, not both)
+
+3. Start the services again:
+```bash
+docker-compose up -d
+```
+
+4. Run the bot using one of the methods described in the Quick Start section
+
+If you encounter MongoDB authentication errors:
+1. Make sure MongoDB is running: `docker-compose ps`
+2. Check if the MongoDB container is healthy: `docker-compose logs mongodb`
+3. Verify your `.env` file has the correct MongoDB connection string with authentication
+4. Restart the services: `docker-compose down && docker-compose up -d`
 
 ## License
 
