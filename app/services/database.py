@@ -90,9 +90,10 @@ class DatabaseService:
             persons.append(Person(**person_dict))
         return persons
 
-    async def get_all_persons_by_tag(self, tag: str) -> List[Person]:
-        """Get all persons that have a specific tag"""
-        cursor = self.collection.find({"tags": tag})
+    async def get_all_persons_by_tags(self, tags: List[str]) -> List[Person]:
+        """Get all persons that have ALL of the specified tags"""
+        query = {"tags": {"$all": tags}}
+        cursor = self.collection.find(query)
         persons = []
         async for person_dict in cursor:
             if person_dict and "_id" in person_dict:

@@ -88,33 +88,6 @@ async def test_get_all_persons(db_service):
     assert usernames == {"user1", "user2", "user3"}
 
 @pytest.mark.asyncio
-async def test_get_all_persons_by_tag(db_service):
-    # Add persons with tags
-    await db_service.add_person("user1")
-    await db_service.add_tag("user1", "developer")
-    
-    await db_service.add_person("user2")
-    await db_service.add_tag("user2", "developer")
-    
-    await db_service.add_person("user3")
-    await db_service.add_tag("user3", "designer")
-    
-    # Test getting developers
-    developers = await db_service.get_all_persons_by_tag("developer")
-    assert len(developers) == 2
-    usernames = {p.username for p in developers}
-    assert usernames == {"user1", "user2"}
-    
-    # Test getting designers
-    designers = await db_service.get_all_persons_by_tag("designer")
-    assert len(designers) == 1
-    assert designers[0].username == "user3"
-    
-    # Test getting non-existent tag
-    empty = await db_service.get_all_persons_by_tag("nonexistent")
-    assert len(empty) == 0
-
-@pytest.mark.asyncio
 async def test_add_person_with_tags(db_service):
     person = await db_service.add_person("test_user", ["developer", "python"])
     assert person.username == "test_user"
@@ -152,4 +125,36 @@ async def test_add_tags(db_service):
     
     # Try adding tags to non-existent person
     result = await db_service.add_tags("nonexistent", ["tag1", "tag2"])
-    assert result is False 
+    assert result is False
+
+@pytest.mark.asyncio
+async def test_get_all_persons_by_tags(db_service):
+    # Add persons with different combinations of tags
+    await db_service.add_person("user1", ["developer", "python", "backend"])
+    await db_service.add_person("user2", ["developer", "javascript", "frontend"])
+    await db_service.add_person("user3", ["developer", "python", "frontend"])
+    await db_service.add_person("user4", ["designer", "ui", "ux"])
+    
+    # Test getting persons with a single tag
+    python_devs = await db_service.get_all_persons_by_tags(["python"])
+    assert len(python_devs) == 2
+    python_usernames = {p.username for p in python_devs}
+    assert python_usernames == {"user1", "user3"}
+    
+    # Test getting persons with multiple tags
+    python_backend_devs = await db_service.get_all_persons_by_tags(["python", "backend"])
+    assert len(python_backend_devs) == 1
+    assert python_backend_devs[0].username == "user1"
+    
+    # Test getting persons with multiple tags in different order
+    backend_python_devs = await db_service.get_all_persons_by_tags(["backend", "python"])
+    assert len(backend_python_devs) == 1
+    assert backend_python_devs[0].username == "user1"
+    
+    # Test with no matching tags combination
+    no_matches = await db_service.get_all_persons_by_tags(["python", "ux"])
+    assert len(no_matches) == 0
+    
+    # Test with non-existent tag
+    non_existent = await db_service.get_all_persons_by_tags(["nonexistent"])
+    assert len(non_existent) == 0 

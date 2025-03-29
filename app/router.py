@@ -48,7 +48,7 @@ async def help_handler(message: Message):
         "/random [tags] - Get a random person (optionally filtered by tags)\n"
         "/add_tags @username tag1 tag2 ... - Add multiple tags to a person\n"
         "/list - List all persons in the database\n"
-        "/list_by_tag tag - List all persons with a specific tag"
+        "/list_by_tags tag1 tag2 ... - List all persons that have ALL the specified tags"
     )
 
 @commands_menu.add_command("add", "Add a person to the database")
@@ -135,21 +135,23 @@ async def list_handler(message: Message):
 
     await send_safe(message.chat.id, response)
 
-@commands_menu.add_command("list_by_tag", "List all persons with a specific tag")
-@router.message(Command("list_by_tag"))
-async def list_by_tag_handler(message: Message):
+@commands_menu.add_command("list_by_tags", "List all persons with ALL the specified tags")
+@router.message(Command("list_by_tags"))
+async def list_by_tags_handler(message: Message):
     if not message.text or len(message.text.split()) < 2:
-        await send_safe(message.chat.id, "Please provide a tag: /list_by_tag tag")
+        await send_safe(message.chat.id, "Please provide at least one tag: /list_by_tags tag1 [tag2 tag3 ...]")
         return
 
-    tag = message.text.split()[1]
-    persons = await db_service.get_all_persons_by_tag(tag)
+    tags = message.text.split()[1:]
+    persons = await db_service.get_all_persons_by_tags(tags)
     
     if not persons:
-        await send_safe(message.chat.id, f"No persons found with tag '{html.bold(tag)}'.")
+        tags_str = ", ".join(f"'{html.bold(tag)}'" for tag in tags)
+        await send_safe(message.chat.id, f"No persons found with all tags: {tags_str}")
         return
 
-    response = f"Persons with tag '{html.bold(tag)}':\n\n"
+    tags_str = ", ".join(f"'{html.bold(tag)}'" for tag in tags)
+    response = f"Persons with all tags {tags_str}:\n\n"
     for person in persons:
         response += f"• {html.bold(person.username)}\n"
 
