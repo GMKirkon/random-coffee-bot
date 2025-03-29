@@ -9,6 +9,21 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.12" ]
+
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: pass
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "echo 'db.runCommand({ping:1}).ok' | mongosh localhost:27017/admin --quiet --username admin --password pass"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -35,5 +50,7 @@ jobs:
       - name: Test with pytest
         run: |
           poetry run pytest tests/
-#        env:
+        env:
+          BOTSPOT_MONGO_DATABASE_CONN_STR: mongodb://admin:pass@localhost:27017/admin?authSource=admin
+          BOTSPOT_MONGO_DATABASE_DATABASE: test_db
 #          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

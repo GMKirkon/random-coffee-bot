@@ -10,6 +10,7 @@ A Telegram bot that helps organize random coffee meetings between team members. 
 - 📊 MongoDB integration with automatic authentication
 - 🔧 Easy configuration via environment variables
 - ⚡ Error handling and reporting
+- 🔄 CI pipeline with MongoDB service for automated testing
 
 ## Quick Start
 
@@ -117,6 +118,12 @@ pre-commit install
 ```bash
 poetry run pytest
 ```
+
+3. About GitHub Actions workflow:
+   - The CI pipeline automatically sets up a MongoDB service for testing
+   - Tests run against this MongoDB instance with authentication
+   - Environment variables are automatically configured for the test environment
+   - You can see the configuration in `.github/workflows/main.yml`
 
 ## Docker Support
 
